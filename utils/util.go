@@ -2,8 +2,8 @@ package utils
 
 import (
 	//"crypto/rand"
-    "math/rand"
 	"fmt"
+	"math/rand"
 
 	"github.com/satori/go.uuid"
 )
@@ -11,11 +11,11 @@ import (
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func RandStringRunes(n int) string {
-    b := make([]rune, n)
-    for i := range b {
-        b[i] = letterRunes[rand.Intn(len(letterRunes))]
-    }
-    return string(b)
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }
 
 /*func RandomHexString(byteLength uint32) (str string, err error) {
@@ -26,7 +26,7 @@ func RandStringRunes(n int) string {
 	return
 }*/
 
-func UuidGenerated() (string) {
+func UuidGenerated() string {
 	u1 := uuid.NewV4()
-    	return fmt.Sprintf("%s", u1)
+	return fmt.Sprintf("%s", u1)
 }

@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"log"
-	"time"
 	"math/rand"
-	
+	"time"
+
+	"github.com/deviceMP/api-server/models"
 	"github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/mysql"
-    "cli-client/models"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 var db *gorm.DB
@@ -18,11 +18,11 @@ func init() {
 	var err error
 	db, err = gorm.Open("mysql", "root:1@/iotgatewaydb?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-        log.Fatalf("Error occurs when connecting to the database %s", err)
-    }
+		log.Fatalf("Error occurs when connecting to the database %s", err)
+	}
 
-    db.AutoMigrate(
-    	&models.App{},
-    	&models.Device{},
-    )
+	db.AutoMigrate(
+		&models.App{},
+		&models.Device{},
+	)
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"log"
 
-	"cli-client/models"
+	"github.com/deviceMP/api-server/models"
 	"time"
 )
 

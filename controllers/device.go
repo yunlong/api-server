@@ -2,7 +2,6 @@ package controllers
 
 import (
     "encoding/json"
-    //"fmt"
     "net/http"
     "time"
     "log"
@@ -10,7 +9,7 @@ import (
     "io"
     "io/ioutil"
 
-    "cli-client/models"
+    "github.com/deviceMP/api-server/models"
 )
 
 func RegisterDevice(w http.ResponseWriter, r *http.Request) {

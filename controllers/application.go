@@ -7,8 +7,8 @@ import (
     "io"
     "io/ioutil"
 
-    "cli-client/models"
-    "cli-client/utils"
+    "github.com/deviceMP/api-server/models"
+    "github.com/deviceMP/api-server/utils"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +16,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	db.Find(&apps)
 
 	json.NewEncoder(w).Encode(apps)
-	//fmt.Fprint(w, "Welcome!\n")
 }
 
 func CreateApp(w http.ResponseWriter, r *http.Request) {
