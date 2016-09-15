@@ -17,13 +17,14 @@ var Routes = m.Routes{
 	m.Route{"CreateApp","POST","/app",c.CreateApp,},
 
 	m.Route{"RegisterDevice","POST","/device",c.RegisterDevice,},
+	m.Route{"UpdateState", "POST", "/device/updatestate", c.UpdateState},
 }
 
 func main() {
 	go controllers.CheckAllDevice()
 
 	router := NewRouter()
-    	log.Fatal(http.ListenAndServe(":8080", router))
+    log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func NewRouter() *mux.Router {

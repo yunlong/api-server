@@ -5,7 +5,6 @@ import (
     "net/http"
     "time"
     "log"
-    "strconv"
     "io"
     "io/ioutil"
 
@@ -37,15 +36,8 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    //Get apikey in application to compare with client request
-    appIdInt, errc := strconv.Atoi(device.AppId)
-    if errc != nil {
-        appIdInt = 0
-        log.Println(errc)
-    }
-
     var application models.App
-    if db.Where(models.App{Id: appIdInt}).First(&application).RecordNotFound() {
+    if db.Where(models.App{Id: device.AppId}).First(&application).RecordNotFound() {
         w.WriteHeader(http.StatusNotFound)
         return
     } else {
@@ -79,6 +71,55 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                 if err := json.NewEncoder(w).Encode(&bodyResponse); err != nil {
                     panic(err)
                 }
+            }
+        }
+    }
+}
+
+func UpdateState(w http.ResponseWriter, r *http.Request) {
+    clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+    var devicestate models.DeviceState
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &devicestate); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422) // unprocessable entity
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+    
+    //Checking app and apikey valid with all request -> common func
+    var application models.App
+    var deviceUpdate models.Device
+
+    if db.Where(models.App{Id: devicestate.AppId}).First(&application).RecordNotFound() {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    } else {
+        if clientApiKey[0] != application.Apikey {
+            w.WriteHeader(http.StatusForbidden)
+            return
+        } else {
+            if db.Where(models.Device{Id: devicestate.DeviceId}).First(&deviceUpdate).RecordNotFound() {
+                w.WriteHeader(http.StatusNotFound)
+                return
+            } else {
+                db.Model(&deviceUpdate).Updates(models.Device{ProvisioningState: devicestate.State})
+                w.WriteHeader(http.StatusCreated)
+                return
             }
         }
     }

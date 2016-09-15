@@ -7,7 +7,7 @@ type Device struct {
 	Uuid                 string    `json:"uuid"`
 	Name                 string    `json:"name"`
 	Devicetype           string    `json:"devicetype"`
-	AppId                string    `json:"appid"`
+	AppId                int    	`json:"appid"`
 	Isonline             bool      `json:"isonline"`
 	Lastseen             time.Time `json:"last_seen"`
 	PublicIP             string    `json:"public_ip"`
@@ -19,9 +19,15 @@ type Device struct {
 }
 
 type DeviceReturn struct {
-	Id         int    `json:"Id,omitempty"`
-	Name       string `json:"name"`
-	Appid      string `json:"appid"`
-	Uuid       string `json:"uuid"`
-	Devicetype string `json:"devicetype"`
+	Id         int    	`json:"Id,omitempty"`
+	Name       string 	`json:"name"`
+	Appid      int 	  	`json:"appid"`
+	Uuid       string 	`json:"uuid"`
+	Devicetype string 	`json:"devicetype"`
+}
+
+type DeviceState struct {
+	AppId 		int 	`json:"appId"`
+	DeviceId 	int 	`json:"deviceId"`
+	State 		string  `json:"state"`
 }
