@@ -1,10 +1,9 @@
 package models
 
 type App struct {
-	Id         int    `sql:"AUTO_INCREMENT",json:"id"`
-	Name       string `json:"name"`
-	Devicetype string `json:"devicetype"`
-	Apikey     string `json:"apikey"`
-	Commit     string `json:"commit"`
-	Repository string `json:"repository"`
+	AppId       int 		`json:"appId"`
+	Commit      string		`json:"commit"`
+	ContainerId string		`json:"containerId"`
+	Env         string		`json:"env"`
+	ImageId     string		`json:"imageId"`
 }

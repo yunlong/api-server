@@ -6,24 +6,28 @@ type Device struct {
 	Id                   int       `sql:"AUTO_INCREMENT",json:"id"`
 	Uuid                 string    `json:"uuid"`
 	Name                 string    `json:"name"`
-	Devicetype           string    `json:"devicetype"`
-	AppId                int    	`json:"appid"`
-	Isonline             bool      `json:"isonline"`
-	Lastseen             time.Time `json:"last_seen"`
-	PublicIP             string    `json:"public_ip"`
-	IpAddress            string    `json:"ip_address"`
+	DeviceType           string    `json:"deviceType"`
+	AppId                int       `json:"appId"`
+	IsOnline             bool      `json:"isOnline"`
+	LastSeen             time.Time `json:"lastSeen"`
+	PublicIP             string    `json:"publicIp"`
+	IpAddress            string    `json:"ipAddress"`
 	Commit               string    `json:"commit"`
-	ProvisioningState    string    `json:"provisioning_state"`
-	ProvisioningProgress string    `json:"provisioning_progress"`
-	DownloadProgress     string    `json:"download_progress"`
+	Status 		     string    `json:"status"`
+	ProvisioningState    string    `json:"provisioningState,omitempty"`
+	ProvisioningProgress int       `json:"provisioningProgress,omitempty"`
+	DownloadProgress     int       `json:"downloadProgress,omitempty"`
+	UpdatePending 	     bool      `json:"updatePending,omitempty"`
+	UpdateDownloaded     bool      `json:"updateDownloaded,omitempty"`
+	UpdateFailed 	     bool      `json:"updateFailed,omitempty"`
 }
 
 type DeviceReturn struct {
-	Id         int    	`json:"Id,omitempty"`
+	Id         int    	`json:"id,omitempty"`
 	Name       string 	`json:"name"`
-	Appid      int 	  	`json:"appid"`
+	AppId      int 	  	`json:"appId"`
 	Uuid       string 	`json:"uuid"`
-	Devicetype string 	`json:"devicetype"`
+	DeviceType string 	`json:"deviceType"`
 }
 
 type DeviceState struct {

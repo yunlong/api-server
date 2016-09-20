@@ -23,7 +23,7 @@ func CheckAllDevice() {
 		db.Find(&devices)
 
 		for _, v := range devices {
-			log.Println("--------->", v.Isonline)
+			log.Println("--------->", v.IsOnline)
 		}
 
 		time.Sleep(10 * time.Second)

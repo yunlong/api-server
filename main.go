@@ -11,20 +11,26 @@ import (
 )
 
 var Routes = m.Routes{
-	m.Route{"Ping","GET","/ping",c.Ping,},
+	m.Route{"Ping", "GET", "/ping", c.Ping},
 
-	m.Route{"Index","GET","/app",c.Index,},
-	m.Route{"CreateApp","POST","/app",c.CreateApp,},
+	m.Route{"ListOrg", "GET", "/org", c.ListOrg},
+	m.Route{"CreateOrg", "POST", "/org", c.CreateOrg},
 
-	m.Route{"RegisterDevice","POST","/device",c.RegisterDevice,},
-	m.Route{"UpdateState", "POST", "/device/updatestate", c.UpdateState},
+	m.Route{"GetApp", "GET", "/org/app/{orgId}", c.GetApp},
+	m.Route{"UpdateApp", "POST", "/org/app/{orgId}", c.UpdateApp},
+
+	m.Route{"ListDeviceByApp", "GET", "/device/{orgId}", c.ListDeviceByApp},
+	m.Route{"RegisterDevice", "POST", "/device/{orgId}", c.RegisterDevice},
+	m.Route{"UpdateState", "POST", "/device/{orgId}/updatestate", c.UpdateState},
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+
 	go controllers.CheckAllDevice()
 
 	router := NewRouter()
-    log.Fatal(http.ListenAndServe(":8080", router))
+    	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func NewRouter() *mux.Router {
