@@ -9,17 +9,40 @@ import (
 
     "github.com/deviceMP/api-server/models"
     "github.com/deviceMP/api-server/utils"
+    "github.com/gorilla/mux"
+    "strconv"
 )
 
 func ListOrg(w http.ResponseWriter, r *http.Request) {
 	var orgs []models.Org
 	db.Find(&orgs)
 
+        w.Header().Set("Access-Control-Allow-Origin", "*")
         w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&orgs)
 }
 
+func GetOrg(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+
+    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(&err)
+    } else {
+        var org models.Org
+        db.Where(models.Org{Id: OrgIdInt}).First(&org)
+
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&org)
+    }
+
+
+}
+
 func CreateOrg(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     var org models.Org
     body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
     if err != nil {
@@ -31,7 +54,6 @@ func CreateOrg(w http.ResponseWriter, r *http.Request) {
         return
     }
     if err := json.Unmarshal(body, &org); err != nil {
-        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
         w.WriteHeader(422)
         if err := json.NewEncoder(w).Encode(err); err != nil {
             panic(err)
