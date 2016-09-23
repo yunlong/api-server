@@ -3,22 +3,25 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"log"
+	//"log"
 
-	"github.com/deviceMP/api-server/models"
-	"time"
+	//"github.com/deviceMP/api-server/models"
+	//"time"
 )
 
+type Connected struct {
+	Connect 	bool 	`json:"connect"`
+}
+
 func Ping(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(true); err != nil {
-		log.Println(err)
-		return
-	}
+	connected := Connected{Connect: true}
+    json.NewEncoder(w).Encode(&connected)
 }
 
 func CheckAllDevice() {
-	for {
+	/*for {
 		var devices []models.Device
 		db.Find(&devices)
 
@@ -27,7 +30,7 @@ func CheckAllDevice() {
 		}
 
 		time.Sleep(10 * time.Second)
-	}
+	}*/
 
 
 }

@@ -19,6 +19,7 @@ func ListDeviceByApp(w http.ResponseWriter, r *http.Request) {
 
     var devices []models.Device
 
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
@@ -27,8 +28,6 @@ func ListDeviceByApp(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
         json.NewEncoder(w).Encode(&devices)
     }
-
-
 }
 
 func RegisterDevice(w http.ResponseWriter, r *http.Request) {
@@ -151,11 +150,42 @@ func UpdateState(w http.ResponseWriter, r *http.Request) {
                     w.WriteHeader(http.StatusNotFound)
                     return
                 } else {
-                    db.Model(&deviceUpdate).Updates(models.Device{ProvisioningState: deviceState.State})
+                    db.Model(&deviceUpdate).Updates(models.Device{Status: deviceState.State})
                     w.WriteHeader(http.StatusCreated)
                     return
                 }
             }
         }
     }
+}
+
+func CheckUpdate(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+    deviceId := vars["deviceId"]
+
+    orgIdInt, err := strconv.Atoi(orgId); if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+    deviceIdInt, err := strconv.Atoi(deviceId); if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
+    var deviceCheck models.Device
+    db.Where(models.Device{AppId: orgIdInt, Id: deviceIdInt}).First(&deviceCheck)
+
+    result := map[string]interface{}{
+        "deviceId":  deviceCheck.Id,
+        "status": deviceCheck.Status,
+    }
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusCreated)
+
+    if err := json.NewEncoder(w).Encode(&result); err != nil {
+        panic(err)
+    }
+
 }

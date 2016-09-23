@@ -23,6 +23,7 @@ var Routes = m.Routes{
 	m.Route{"ListDeviceByApp", "GET", "/device/{orgId}", c.ListDeviceByApp},
 	m.Route{"RegisterDevice", "POST", "/device/{orgId}", c.RegisterDevice},
 	m.Route{"UpdateState", "POST", "/device/{orgId}/updatestate", c.UpdateState},
+	m.Route{"CheckUpdate", "POST", "/device/{orgId}/checkupdate/{deviceId}", c.CheckUpdate},
 }
 
 func main() {

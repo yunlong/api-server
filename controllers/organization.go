@@ -17,8 +17,8 @@ func ListOrg(w http.ResponseWriter, r *http.Request) {
 	var orgs []models.Org
 	db.Find(&orgs)
 
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.WriteHeader(http.StatusOK)
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&orgs)
 }
 
@@ -26,6 +26,7 @@ func GetOrg(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     orgId := vars["orgId"]
 
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
@@ -33,12 +34,9 @@ func GetOrg(w http.ResponseWriter, r *http.Request) {
         var org models.Org
         db.Where(models.Org{Id: OrgIdInt}).First(&org)
 
-        w.Header().Set("Access-Control-Allow-Origin", "*")
         w.WriteHeader(http.StatusOK)
         json.NewEncoder(w).Encode(&org)
     }
-
-
 }
 
 func CreateOrg(w http.ResponseWriter, r *http.Request) {

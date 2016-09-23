@@ -13,7 +13,7 @@ type Device struct {
 	PublicIP             string    `json:"publicIp"`
 	IpAddress            string    `json:"ipAddress"`
 	Commit               string    `json:"commit"`
-	Status 		     string    `json:"status"`
+	Status 		     	 string    `json:"status"`
 	ProvisioningState    string    `json:"provisioningState,omitempty"`
 	ProvisioningProgress int       `json:"provisioningProgress,omitempty"`
 	DownloadProgress     int       `json:"downloadProgress,omitempty"`
