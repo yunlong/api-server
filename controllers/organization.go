@@ -6,19 +6,22 @@ import (
     "log"
     "io"
     "io/ioutil"
+    "bufio"
+    "os"
+    "strconv"
+    "fmt"
 
     "github.com/deviceMP/api-server/models"
     "github.com/deviceMP/api-server/utils"
     "github.com/gorilla/mux"
-    "strconv"
 )
 
 func ListOrg(w http.ResponseWriter, r *http.Request) {
 	var orgs []models.Org
 	db.Find(&orgs)
 
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.WriteHeader(http.StatusOK)
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&orgs)
 }
 
@@ -82,5 +85,50 @@ func CreateOrg(w http.ResponseWriter, r *http.Request) {
                 return
             }
         }
+    }
+}
+
+func DownloadConfig(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+
+    OrgIdInt, err := strconv.Atoi(orgId)
+    if err != nil {
+        OrgIdInt = 0
+    }
+
+    var org models.Org
+    db.Where(models.Org{Id: OrgIdInt}).First(&org)
+    orgConfig := models.OrgConfig{ApplicationId: org.Id, ApplicationName: org.Name, ApiKey: org.ApiKey, DeviceType: org.DeviceType}
+
+
+    var fileName = "config.json"
+    var filePath = "/tmp/" + fileName
+
+    f, err := os.Create(filePath)
+    handleError(err)
+
+    b, err := json.Marshal(orgConfig)
+    handleError(err)
+
+    _, err = f.Write(b)
+    handleError(err)
+    f.Close()
+
+    file, err := os.Open(filePath)
+    handleError(err)
+
+    r4 := bufio.NewReader(file)
+    //copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
+    w.Header().Set("Content-Disposition", "attachment; filename="+fileName+"")
+    w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+    w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
+    //stream the body to the client without fully loading it into memory
+    io.Copy(w, r4)
+}
+
+func handleError(e error) {
+    if e != nil {
+        fmt.Println(e)
     }
 }

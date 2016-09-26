@@ -8,3 +8,11 @@ type Org struct {
 	Commit     string `json:"commit"`
 	Repository string `json:"repository"`
 }
+
+
+type OrgConfig struct {
+	ApplicationName 	string 	`json:"applicationName"`
+	ApplicationId 		int 	`json:"applicationId"`
+	ApiKey 				string  `json:"apikey"`
+	DeviceType 			string 	`json:"deviceType"`
+}

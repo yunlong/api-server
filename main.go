@@ -16,6 +16,7 @@ var Routes = m.Routes{
 	m.Route{"ListOrg", "GET", "/org", c.ListOrg},
 	m.Route{"CreateOrg", "POST", "/org", c.CreateOrg},
 	m.Route{"GetOrg", "GET", "/org/{orgId}", c.GetOrg},
+	m.Route{"DownloadConfig", "GET", "/org/{orgId}/configfile", c.DownloadConfig},
 
 	m.Route{"GetApp", "GET", "/org/app/{orgId}", c.GetApp},
 	m.Route{"UpdateApp", "POST", "/org/app/{orgId}", c.UpdateApp},
