@@ -89,6 +89,7 @@ func CreateOrg(w http.ResponseWriter, r *http.Request) {
 }
 
 func DownloadConfig(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
     orgId := vars["orgId"]
 
