@@ -35,3 +35,9 @@ type DeviceState struct {
 	DeviceId 	int 	`json:"deviceId"`
 	State 		string  `json:"state"`
 }
+
+type DeviceOnline struct {
+	Id 			int 	`json:"id"`
+	AppId 		int 	`json:"appId"`
+	IsOnline 	bool  	`json:"isOnline"`
+}

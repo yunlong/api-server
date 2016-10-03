@@ -24,9 +24,34 @@ func ListDeviceByApp(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
-        db.Where(models.Device{AppId: OrgIdInt}).Find(&devices)
         w.WriteHeader(http.StatusOK)
-        json.NewEncoder(w).Encode(&devices)
+        if !db.Where(models.Device{AppId: OrgIdInt}).Find(&devices).RecordNotFound() {
+            json.NewEncoder(w).Encode(&devices)
+        }
+    }
+}
+
+func GetDeviceById(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+    deviceId := vars["deviceId"]
+
+    var deviceDetail models.Device
+
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(&err)
+    } else {
+        if DeviceIdInt, err := strconv.Atoi(deviceId); err != nil {
+            w.WriteHeader(http.StatusBadRequest)
+            json.NewEncoder(w).Encode(&err)
+        } else {
+            w.WriteHeader(http.StatusOK)
+            if !db.Where(models.Device{AppId: OrgIdInt, Id: DeviceIdInt}).First(&deviceDetail).RecordNotFound() {
+                json.NewEncoder(w).Encode(&deviceDetail)
+            }    
+        }
     }
 }
 
@@ -80,6 +105,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                     IsOnline:   true,
                     LastSeen:   t,
                     PublicIP:   device.PublicIP,
+                    IpAddress:  device.IpAddress,
                 }
 
                 if dbc := db.Create(&deviceCreate); dbc.Error != nil {
@@ -187,5 +213,39 @@ func CheckUpdate(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(&result); err != nil {
         panic(err)
     }
+}
 
+//Params: OrgId & DeviceId
+//QueryString?online=True
+func DeviceOnline(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    var deviceOnline models.DeviceOnline
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+
+    if err := json.Unmarshal(body, &deviceOnline); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+    var deviceCheck models.Device
+    rowUpdated := db.Model(&deviceCheck).Where(models.Device{AppId: deviceOnline.AppId, Id: deviceOnline.AppId}).UpdateColumn(models.Device{IsOnline: deviceOnline.IsOnline}).RowsAffected
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    if rowUpdated > 0 {
+        w.WriteHeader(http.StatusOK)
+    } else {
+        w.WriteHeader(http.StatusInternalServerError)
+    }
 }
