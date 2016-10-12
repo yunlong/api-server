@@ -20,8 +20,8 @@ func ListOrg(w http.ResponseWriter, r *http.Request) {
 	var orgs []models.Org
 	db.Find(&orgs)
 
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.WriteHeader(http.StatusOK)
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&orgs)
 }
 

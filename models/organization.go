@@ -11,8 +11,8 @@ type Org struct {
 
 
 type OrgConfig struct {
-	ApplicationName 	string 	`json:"applicationName"`
-	ApplicationId 		int 	`json:"applicationId"`
+	ApplicationName 	string 	`json:"organization"`
+	ApplicationId 		int 	`json:"orgId"`
 	ApiKey 				string  `json:"apikey"`
 	DeviceType 			string 	`json:"deviceType"`
 }
