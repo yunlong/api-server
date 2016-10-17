@@ -36,6 +36,12 @@ type DeviceState struct {
 	State 		string  `json:"state"`
 }
 
+type DeviceStatus struct {
+	AppId 		int 	`json:"appId"`
+	DeviceId 	int 	`json:"deviceId"`
+	Status 		bool  	`json:"status"`
+}
+
 type DeviceProgress struct {
 	AppId 		int 	`json:"appId"`
 	DeviceId 	int 	`json:"deviceId"`

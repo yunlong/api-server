@@ -11,7 +11,6 @@ import (
 
     "github.com/deviceMP/api-server/models"
     "github.com/gorilla/mux"
-    
 )
 
 func ListDeviceByOrg(w http.ResponseWriter, r *http.Request) {
@@ -131,6 +130,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateState(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
     orgId := vars["orgId"]
 
@@ -179,6 +179,65 @@ func UpdateState(w http.ResponseWriter, r *http.Request) {
                 } else {
                     db.Model(&deviceUpdate).Updates(models.Device{Status: deviceState.State})
                     w.WriteHeader(http.StatusCreated)
+                    return
+                }
+            }
+        }
+    }
+}
+
+//Update status online/offline of device
+func UpdateStatus(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+
+    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(&err)
+    } else {
+        clientApiKey := r.URL.Query()["apikey"]
+        if len(clientApiKey) == 0 {
+            w.WriteHeader(http.StatusNotAcceptable)
+            return
+        }
+        var deviceStatus models.DeviceStatus
+        body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+        if err != nil {
+            log.Println(err)
+            return
+        }
+        if err := r.Body.Close(); err != nil {
+            log.Println(err)
+            return
+        }
+        if err := json.Unmarshal(body, &deviceStatus); err != nil {
+            w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+            w.WriteHeader(422)
+            if err := json.NewEncoder(w).Encode(err); err != nil {
+                log.Println(err)
+                return
+            }
+        }
+
+        //Checking app and apikey valid with all request -> common func
+        var org models.Org
+        var deviceUpdate models.Device
+        if db.Where(models.Org{Id: OrgIdInt}).First(&org).RecordNotFound() {
+            w.WriteHeader(http.StatusNotFound)
+            return
+        } else {
+            if clientApiKey[0] != org.ApiKey {
+                w.WriteHeader(http.StatusForbidden)
+                return
+            } else {
+                if db.Where(models.Device{Id: deviceStatus.DeviceId}).First(&deviceUpdate).RecordNotFound() {
+                    w.WriteHeader(http.StatusNotFound)
+                    return
+                } else {
+                    deviceUpdate.IsOnline = deviceStatus.Status
+                    db.Save(&deviceUpdate)
+                    w.WriteHeader(http.StatusOK)
                     return
                 }
             }

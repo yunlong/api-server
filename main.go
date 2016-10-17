@@ -14,6 +14,7 @@ var Routes = m.Routes{
 	m.Route{"CreateOrg", "POST", "/org", c.CreateOrg},
 	m.Route{"GetOrg", "GET", "/org/detail/{orgId}", c.GetOrg},
 	m.Route{"DConfig", "GET", "/org/configfile/{orgId}", c.DownloadConfig},
+	m.Route{"DeleteOrg", "POST", "/org/delete/{orgId}", c.DeleteOrg},
 
 	m.Route{"UpdateApp", "PUT", "/app", c.UpdateApp},
 	m.Route{"CreateApp", "POST", "/app", c.CreateApp},
@@ -25,6 +26,7 @@ var Routes = m.Routes{
 	m.Route{"RegisterDevice", "POST", "/device/{orgId}", c.RegisterDevice},
 	m.Route{"GetDeviceById", "GET", "/device/{orgId}/{deviceId}", c.GetDeviceById},
 	m.Route{"UpdateState", "POST", "/device/{orgId}/updatestate", c.UpdateState},
+	m.Route{"UpdateStatus", "POST", "/device/{orgId}/updatestatus", c.UpdateStatus},
 	m.Route{"UpdateProgress", "POST", "/device/{orgId}/updateprogress", c.UpdateProgress},
 	m.Route{"CheckUpdate", "POST", "/device/{orgId}/checkupdate/{deviceId}", c.CheckUpdate},
 	m.Route{"UpdateDeviceName", "POST", "/device/{orgId}/updatename/{deviceId}", c.UpdateDeviceName},

@@ -20,6 +20,12 @@ func ListOrg(w http.ResponseWriter, r *http.Request) {
 	var orgs []models.Org
 	db.Find(&orgs)
 
+    for i, v := range orgs {
+        var devices []models.Device
+        db.Where(models.Device{AppId: v.Id}).Find(&devices)
+        orgs[i].Repository = strconv.Itoa(len(devices))
+    }
+
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&orgs)
@@ -126,6 +132,33 @@ func DownloadConfig(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
     //stream the body to the client without fully loading it into memory
     io.Copy(w, r4)
+}
+
+func DeleteOrg(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    vars := mux.Vars(r)
+    orgId := vars["orgId"]
+
+    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(&err)
+    } else {
+        var org models.Org
+        var devices []models.Device
+        db.Where(models.Org{Id: OrgIdInt}).First(&org)
+        db.Where(models.Device{AppId: org.Id}).Find(&devices)
+        for _,v := range devices {
+            var apps []models.App
+            db.Where(models.App{Uuid: v.Uuid}).Find(&apps)
+            for _,v := range apps {
+                db.Delete(&v)
+            }
+            db.Delete(&v)
+        }
+
+        db.Delete(&org)
+        w.WriteHeader(http.StatusOK)
+    }
 }
 
 func handleError(e error) {
