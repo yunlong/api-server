@@ -13,19 +13,19 @@ import (
     "github.com/gorilla/mux"
 )
 
-func ListDeviceByOrg(w http.ResponseWriter, r *http.Request) {
+func ListDeviceByProject(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
 
     var devices []models.Device
 
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
         w.WriteHeader(http.StatusOK)
-        if !db.Where(models.Device{AppId: OrgIdInt}).Find(&devices).RecordNotFound() {
+        if !db.Where(models.Device{ProjectId: projectIdInt}).Find(&devices).RecordNotFound() {
             json.NewEncoder(w).Encode(&devices)
         }
     }
@@ -33,13 +33,13 @@ func ListDeviceByOrg(w http.ResponseWriter, r *http.Request) {
 
 func GetDeviceById(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
     deviceId := vars["deviceId"]
 
     var deviceDetail models.Device
 
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
@@ -48,7 +48,7 @@ func GetDeviceById(w http.ResponseWriter, r *http.Request) {
             json.NewEncoder(w).Encode(&err)
         } else {
             w.WriteHeader(http.StatusOK)
-            if !db.Where(models.Device{AppId: OrgIdInt, Id: DeviceIdInt}).First(&deviceDetail).RecordNotFound() {
+            if !db.Where(models.Device{ProjectId: projectIdInt, Id: DeviceIdInt}).First(&deviceDetail).RecordNotFound() {
                 json.NewEncoder(w).Encode(&deviceDetail)
             }    
         }
@@ -57,9 +57,9 @@ func GetDeviceById(w http.ResponseWriter, r *http.Request) {
 
 func RegisterDevice(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
 
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
@@ -87,12 +87,12 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
             }
         }
 
-        var org models.Org
-        if db.Where(models.Org{Id: OrgIdInt}).First(&org).RecordNotFound() {
+        var project models.Project
+        if db.Where(models.Project{Id: projectIdInt}).First(&project).RecordNotFound() {
             w.WriteHeader(http.StatusNotFound)
             return
         } else {
-            if clientApiKey[0] != org.ApiKey {
+            if clientApiKey[0] != project.ApiKey {
                 w.WriteHeader(http.StatusForbidden)
                 return
             } else {
@@ -101,7 +101,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                     Uuid:       device.Uuid,
                     Name:       device.Name,
                     DeviceType: device.DeviceType,
-                    AppId:      OrgIdInt,
+                    ProjectId:  projectIdInt,
                     IsOnline:   true,
                     LastSeen:   t,
                     PublicIP:   device.PublicIP,
@@ -119,7 +119,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
                     w.WriteHeader(http.StatusCreated)
 
-                    bodyResponse := models.DeviceReturn{Id: deviceCreate.Id, Name: deviceCreate.Name,AppId: deviceCreate.AppId,Uuid:deviceCreate.Uuid,DeviceType:deviceCreate.DeviceType}
+                    bodyResponse := models.DeviceReturn{Id: deviceCreate.Id, Name: deviceCreate.Name,ProjectId: deviceCreate.ProjectId,Uuid:deviceCreate.Uuid,DeviceType:deviceCreate.DeviceType}
                     if err := json.NewEncoder(w).Encode(&bodyResponse); err != nil {
                         panic(err)
                     }
@@ -132,9 +132,9 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
 func UpdateState(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
 
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
@@ -163,13 +163,13 @@ func UpdateState(w http.ResponseWriter, r *http.Request) {
         }
 
         //Checking app and apikey valid with all request -> common func
-        var org models.Org
+        var project models.Project
         var deviceUpdate models.Device
-        if db.Where(models.Org{Id: OrgIdInt}).First(&org).RecordNotFound() {
+        if db.Where(models.Project{Id: projectIdInt}).First(&project).RecordNotFound() {
             w.WriteHeader(http.StatusNotFound)
             return
         } else {
-            if clientApiKey[0] != org.ApiKey {
+            if clientApiKey[0] != project.ApiKey {
                 w.WriteHeader(http.StatusForbidden)
                 return
             } else {
@@ -190,9 +190,9 @@ func UpdateState(w http.ResponseWriter, r *http.Request) {
 func UpdateStatus(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
 
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
@@ -221,13 +221,13 @@ func UpdateStatus(w http.ResponseWriter, r *http.Request) {
         }
 
         //Checking app and apikey valid with all request -> common func
-        var org models.Org
+        var project models.Project
         var deviceUpdate models.Device
-        if db.Where(models.Org{Id: OrgIdInt}).First(&org).RecordNotFound() {
+        if db.Where(models.Project{Id: projectIdInt}).First(&project).RecordNotFound() {
             w.WriteHeader(http.StatusNotFound)
             return
         } else {
-            if clientApiKey[0] != org.ApiKey {
+            if clientApiKey[0] != project.ApiKey {
                 w.WriteHeader(http.StatusForbidden)
                 return
             } else {
@@ -247,9 +247,9 @@ func UpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 func UpdateProgress(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
 
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
@@ -278,13 +278,13 @@ func UpdateProgress(w http.ResponseWriter, r *http.Request) {
         }
 
         //Checking app and apikey valid with all request -> common func
-        var org models.Org
+        var project models.Project
         var deviceUpdate models.Device
-        if db.Where(models.Org{Id: OrgIdInt}).First(&org).RecordNotFound() {
+        if db.Where(models.Project{Id: projectIdInt}).First(&project).RecordNotFound() {
             w.WriteHeader(http.StatusNotFound)
             return
         } else {
-            if clientApiKey[0] != org.ApiKey {
+            if clientApiKey[0] != project.ApiKey {
                 w.WriteHeader(http.StatusForbidden)
                 return
             } else {
@@ -303,10 +303,10 @@ func UpdateProgress(w http.ResponseWriter, r *http.Request) {
 
 func CheckUpdate(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    orgId := vars["orgId"]
+    projectId := vars["projectId"]
     deviceId := vars["deviceId"]
 
-    orgIdInt, err := strconv.Atoi(orgId); if err != nil {
+    projectIdInt, err := strconv.Atoi(projectId); if err != nil {
         w.WriteHeader(http.StatusBadRequest)
         return
     }
@@ -316,7 +316,7 @@ func CheckUpdate(w http.ResponseWriter, r *http.Request) {
     }
 
     var deviceCheck models.Device
-    db.Where(models.Device{AppId: orgIdInt, Id: deviceIdInt}).First(&deviceCheck)
+    db.Where(models.Device{ProjectId: projectIdInt, Id: deviceIdInt}).First(&deviceCheck)
 
     result := map[string]interface{}{
         "deviceId":  deviceCheck.Id,
@@ -356,7 +356,7 @@ func DeviceOnline(w http.ResponseWriter, r *http.Request) {
     }
 
     var deviceCheck models.Device
-    rowUpdated := db.Model(&deviceCheck).Where(models.Device{AppId: deviceOnline.AppId, Id: deviceOnline.AppId}).UpdateColumn(models.Device{IsOnline: deviceOnline.IsOnline}).RowsAffected
+    rowUpdated := db.Model(&deviceCheck).Where(models.Device{ProjectId: deviceOnline.ProjectId, Id: deviceOnline.Id}).UpdateColumn(models.Device{IsOnline: deviceOnline.IsOnline}).RowsAffected
 
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     if rowUpdated > 0 {

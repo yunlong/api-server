@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	//"github.com/heroku/docker-registry-client/registry"
+	"strings"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -33,6 +34,12 @@ func RandStringRunes(n int) string {
 func UuidGenerated() string {
 	u1 := uuid.NewV4()
 	return fmt.Sprintf("%s", u1)
+}
+
+func RenameImage(oldName string, nameLength int) string {
+	imageEtx := oldName[strings.LastIndex(oldName,"."):len(oldName)]
+	newName := RandStringRunes(nameLength)
+	return newName + imageEtx
 }
 
 /*

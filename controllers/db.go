@@ -23,7 +23,8 @@ func init() {
 
 	db.AutoMigrate(
 		&models.Org{},
-		&models.App{},
+		&models.Project{},
 		&models.Device{},
+		&models.App{},
 	)
 }

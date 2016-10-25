@@ -7,7 +7,7 @@ type Device struct {
 	Uuid                 string    `json:"uuid"`
 	Name                 string    `json:"name"`
 	DeviceType           string    `json:"deviceType"`
-	AppId                int       `json:"appId"`
+	ProjectId            int       `json:"projectId"`
 	IsOnline             bool      `json:"isOnline"`
 	LastSeen             time.Time `json:"lastSeen"`
 	PublicIP             string    `json:"publicIp"`
@@ -25,32 +25,32 @@ type Device struct {
 type DeviceReturn struct {
 	Id         int    	`json:"id,omitempty"`
 	Name       string 	`json:"name"`
-	AppId      int 	  	`json:"appId"`
+	ProjectId  int 	  	`json:"projectId"`
 	Uuid       string 	`json:"uuid"`
 	DeviceType string 	`json:"deviceType"`
 }
 
 type DeviceState struct {
-	AppId 		int 	`json:"appId"`
+	ProjectId 	int 	`json:"projectId"`
 	DeviceId 	int 	`json:"deviceId"`
 	State 		string  `json:"state"`
 }
 
 type DeviceStatus struct {
-	AppId 		int 	`json:"appId"`
+	ProjectId 	int 	`json:"projectId"`
 	DeviceId 	int 	`json:"deviceId"`
 	Status 		bool  	`json:"status"`
 }
 
 type DeviceProgress struct {
-	AppId 		int 	`json:"appId"`
+	ProjectId 	int 	`json:"projectId"`
 	DeviceId 	int 	`json:"deviceId"`
 	Progress 	int 	`json:"progress"`
 }
 
 type DeviceOnline struct {
-	Id 			int 	`json:"id"`
-	AppId 		int 	`json:"appId"`
+	Id 		int 	`json:"id"`
+	ProjectId 	int 	`json:"projectId"`
 	IsOnline 	bool  	`json:"isOnline"`
 }
 
