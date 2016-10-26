@@ -19,7 +19,7 @@ var Routes = m.Routes{
 	//Project
 	m.Route{"ListProjectByOrg", "GET", "/org/{orgId}/project", c.ListProjectByOrg},
 	m.Route{"CreateProject", "POST", "/org/{orgId}/project", c.CreateProject},
-	m.Route{"UpdateProject", "PUT", "/org/{orgId}/project", c.UpdateProject},
+	m.Route{"UpdateProject", "POST", "/org/{orgId}/updateproject", c.UpdateProject},
 	m.Route{"GetProject", "GET", "/org/{orgId}/project/{projectId}", c.GetProject},
 	m.Route{"DConfig", "GET", "/org/{orgId}/download/{projectId}", c.DownloadConfig},
 	m.Route{"DeleteProject", "POST", "/org/{orgId}/delete/{projectId}", c.DeleteProject},
@@ -27,19 +27,19 @@ var Routes = m.Routes{
 	//Device
 	m.Route{"DeviceOnline", "POST", "/org/{orgId}/project/{projectId}/device/online", c.DeviceOnline},
 	m.Route{"ListDeviceByProject", "GET", "/org/{orgId}/project/{projectId}/device", c.ListDeviceByProject},
-	m.Route{"RegisterDevice", "POST", "/org/{orgId}/project/{projectId}/device", c.RegisterDevice},
+	m.Route{"RegisterDevice", "POST", "/registerdevice", c.RegisterDevice},
 	m.Route{"GetDeviceById", "GET", "/org/{orgId}/project/{projectId}/device/{deviceId}", c.GetDeviceById},
-	m.Route{"UpdateState", "POST", "/org/{orgId}/project/{projectId}/device/{deviceId}/updatestate", c.UpdateState},
-	m.Route{"UpdateStatus", "POST", "/org/{orgId}/project/{projectId}/device/{deviceId}/updatestatus", c.UpdateStatus},
-	m.Route{"UpdateProgress", "POST", "/org/{orgId}/project/{projectId}/device/{deviceId}/updateprogress", c.UpdateProgress},
-	m.Route{"CheckUpdate", "POST", "/org/{orgId}/project/{projectId}/device/{deviceId}/checkupdate", c.CheckUpdate},
-	m.Route{"UpdateDeviceName", "POST", "/org/{orgId}/project/{projectId}/device/{deviceId}/updatename", c.UpdateDeviceName},
+	m.Route{"UpdateState", "POST", "/updatestate", c.UpdateState},
+	m.Route{"UpdateStatus", "POST", "/updatestatus", c.UpdateStatus},
+	m.Route{"UpdateProgress", "POST", "/updateprogress", c.UpdateProgress},
+	m.Route{"CheckUpdate", "POST", "/checkupdate/{projectId}/{deviceId}", c.CheckUpdate},
+	m.Route{"UpdateDeviceName", "POST", "/updatename/{deviceId}", c.UpdateDeviceName},
 
 	//App
 	m.Route{"GetApp", "GET", "/device/{deviceId}/app", c.GetApp},
-	m.Route{"UpdateApp", "PUT", "/device/{deviceId}/app", c.UpdateApp},
-	m.Route{"CreateApp", "POST", "/device/{deviceId}/app", c.CreateApp},
-	m.Route{"DeleteApp", "DELETE", "/device/{deviceId}/app", c.DeleteApp},
+	m.Route{"UpdateApp", "POST", "/updateapp", c.UpdateApp},
+	m.Route{"CreateApp", "POST", "/createapp", c.CreateApp},
+	m.Route{"DeleteApp", "DELETE", "/deleteapp", c.DeleteApp},
 
 	//m.Route{"CheckForUpdate", "POST", "/device/{orgId}/checkforupdate/{deviceId}", c.CheckForUpdate},
 }

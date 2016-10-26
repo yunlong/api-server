@@ -29,6 +29,7 @@ func GetApp(w http.ResponseWriter, r *http.Request) {
 // Only change commit value because if agent seen the commit had changed, it will be pull latest image from docker hub and do update.
 // TODO: When user commit code, need to trigger and build, push image to docker hub done --> call api UpdateApp.
 func UpdateApp(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var app models.App
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {

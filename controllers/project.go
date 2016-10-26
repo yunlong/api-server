@@ -130,21 +130,10 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		if project.Name == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
 		var projectUpdate models.Project
-		rowUpdated := db.Model(&projectUpdate).Where(models.Project{Id: project.Id}).UpdateColumn(models.Project{Name: project.Name,
-			Description: project.Description,Image:project.Image,Repository:project.Repository}).RowsAffected
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		if rowUpdated > 0 {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		db.Model(&projectUpdate).Where(models.Project{Id: project.Id}).UpdateColumn(models.Project{Name: project.Name,
+			Description: project.Description,Image:project.Image,Repository:project.Repository})
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -190,16 +179,16 @@ func DownloadConfig(w http.ResponseWriter, r *http.Request) {
 func DeleteProject(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
-	orgId := vars["orgId"]
+	projectId := vars["projectId"]
 
-	if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&err)
 	} else {
-		var org models.Org
+		var project models.Project
 		var devices []models.Device
-		db.Where(models.Org{Id: OrgIdInt}).First(&org)
-		db.Where(models.Device{ProjectId: org.Id}).Find(&devices)
+		db.Where(models.Project{Id: projectIdInt}).First(&project)
+		db.Where(models.Device{ProjectId: project.Id}).Find(&devices)
 		for _,v := range devices {
 			var apps []models.App
 			db.Where(models.App{Uuid: v.Uuid}).Find(&apps)
@@ -209,7 +198,7 @@ func DeleteProject(w http.ResponseWriter, r *http.Request) {
 			db.Delete(&v)
 		}
 
-		db.Delete(&org)
+		db.Delete(&project)
 		w.WriteHeader(http.StatusOK)
 	}
 }
