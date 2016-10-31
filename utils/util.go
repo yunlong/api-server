@@ -42,6 +42,13 @@ func RenameImage(oldName string, nameLength int) string {
 	return newName + imageEtx
 }
 
+func AddProjectEnv(m map[string]string, key, value string) {
+    _, madd := m[key]
+    if !madd {
+		m[key] = value
+    }
+}
+
 /*
 func GetTagLatest(image string) (string, error) {
 	reg := registry.TagsFullResponse{}

@@ -35,7 +35,7 @@ func GetOrg(w http.ResponseWriter, r *http.Request) {
         json.NewEncoder(w).Encode(&err)
     } else {
         var org models.Org
-        db.Where(models.Org{Id: OrgIdInt}).First(&org)
+        db.Where(models.Org{ID: OrgIdInt}).First(&org)
 
         w.WriteHeader(http.StatusOK)
         json.NewEncoder(w).Encode(&org)
@@ -134,8 +134,8 @@ func DeleteOrg(w http.ResponseWriter, r *http.Request) {
     } else {
         var org models.Org
         var devices []models.Device
-        db.Where(models.Org{Id: OrgIdInt}).First(&org)
-        db.Where(models.Device{ProjectId: org.Id}).Find(&devices)
+        db.Where(models.Org{ID: OrgIdInt}).First(&org)
+        db.Where(models.Device{ProjectId: org.ID}).Find(&devices)
         for _,v := range devices {
             var apps []models.App
             db.Where(models.App{Uuid: v.Uuid}).Find(&apps)

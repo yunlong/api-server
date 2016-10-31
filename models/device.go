@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Device struct {
-	Id                   int       `sql:"AUTO_INCREMENT",json:"id"`
+	ID                   int       `sql:"AUTO_INCREMENT" json:"id"`
 	Uuid                 string    `json:"uuid"`
 	Name                 string    `json:"name"`
 	DeviceType           string    `json:"deviceType"`
@@ -13,7 +13,7 @@ type Device struct {
 	PublicIP             string    `json:"publicIp"`
 	IpAddress            string    `json:"ipAddress"`
 	Commit               string    `json:"commit"`
-	Status 		     string    `json:"status"`
+	Status 		     	 string    `json:"status"`
 	ProvisioningState    string    `json:"provisioningState,omitempty"`
 	ProvisioningProgress int       `json:"provisioningProgress,omitempty"`
 	DownloadProgress     int       `json:"downloadProgress,omitempty"`
@@ -49,7 +49,7 @@ type DeviceProgress struct {
 }
 
 type DeviceOnline struct {
-	Id 		int 	`json:"id"`
+	Id 			int 	`json:"id"`
 	ProjectId 	int 	`json:"projectId"`
 	IsOnline 	bool  	`json:"isOnline"`
 }

@@ -26,5 +26,6 @@ func init() {
 		&models.Project{},
 		&models.Device{},
 		&models.App{},
+		&models.ProjectEnv{},
 	)
 }

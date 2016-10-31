@@ -23,6 +23,9 @@ var Routes = m.Routes{
 	m.Route{"GetProject", "GET", "/org/{orgId}/project/{projectId}", c.GetProject},
 	m.Route{"DConfig", "GET", "/org/{orgId}/download/{projectId}", c.DownloadConfig},
 	m.Route{"DeleteProject", "POST", "/org/{orgId}/delete/{projectId}", c.DeleteProject},
+	m.Route{"ListProjectEnv", "GET", "/org/{orgId}/project/{projectId}/env", c.ListProjectEnv},
+	m.Route{"AddProjectEnv", "POST", "/org/{orgId}/project/{projectId}/env", c.AddProjectEnv},
+	m.Route{"DeleteProjectEnv", "POST", "/deleteenv/{envId}", c.DeleteProjectEnv},
 
 	//Device
 	m.Route{"DeviceOnline", "POST", "/org/{orgId}/project/{projectId}/device/online", c.DeviceOnline},

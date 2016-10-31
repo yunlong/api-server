@@ -29,7 +29,7 @@ func ListProjectByOrg(w http.ResponseWriter, r *http.Request) {
 
 		for i, v := range projects {
 			var devices []models.Device
-			db.Where(models.Device{ProjectId: v.Id}).Find(&devices)
+			db.Where(models.Device{ProjectId: v.ID}).Find(&devices)
 			projects[i].DeviceTotal = len(devices)
 		}
 
@@ -41,20 +41,20 @@ func ListProjectByOrg(w http.ResponseWriter, r *http.Request) {
 func GetProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgId := vars["orgId"]
-	projectId := vars["projectId"]
+	ProjectId := vars["projectId"]
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if orgIdInt, err := strconv.Atoi(orgId); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&err)
-	} else if projectIdInt, err := strconv.Atoi(projectId); err != nil {
+	} else if ProjectIdInt, err := strconv.Atoi(ProjectId); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&err)
 	} else {
 		var project models.Project
-		db.Where(models.Project{OrgId: orgIdInt, Id:projectIdInt}).First(&project)
+		db.Where(models.Project{OrgId: orgIdInt, ID:ProjectIdInt}).First(&project)
 		var devices []models.Device
-		db.Where(models.Device{ProjectId: project.Id}).Find(&devices)
+		db.Where(models.Device{ProjectId: project.ID}).Find(&devices)
 		project.DeviceTotal = len(devices)
 
 		w.WriteHeader(http.StatusOK)
@@ -87,13 +87,13 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		}
 
 		projectCreate := models.Project{
-			OrgId: 		project.OrgId,
+			OrgId: 			project.OrgId,
 			Name:       	project.Name,
 			Description: 	project.Description,
-			Image:     	project.Image,
+			Image:     		project.Image,
 			DeviceType: 	project.DeviceType,
 			ApiKey:     	utils.RandStringRunes(32),
-			Commit:    	"",
+			Commit:    		"",
 			Repository: 	project.Repository,
 		}
 
@@ -131,7 +131,7 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var projectUpdate models.Project
-		db.Model(&projectUpdate).Where(models.Project{Id: project.Id}).UpdateColumn(models.Project{Name: project.Name,
+		db.Model(&projectUpdate).Where(models.Project{ID: project.ID}).UpdateColumn(models.Project{Name: project.Name,
 			Description: project.Description,Image:project.Image,Repository:project.Repository})
 		w.WriteHeader(http.StatusOK)
 	}
@@ -140,16 +140,16 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 func DownloadConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
-	projectId := vars["projectId"]
+	ProjectId := vars["projectId"]
 
-	projectIdInt, err := strconv.Atoi(projectId)
+	ProjectIdInt, err := strconv.Atoi(ProjectId)
 	if err != nil {
-		projectIdInt = 0
+		ProjectIdInt = 0
 	}
 
 	var project models.Project
-	db.Where(models.Project{Id: projectIdInt}).First(&project)
-	projectConfig := models.ProjectConfig{ProjectId: project.Id, ProjectName: project.Name, ApiKey: project.ApiKey, DeviceType: project.DeviceType}
+	db.Where(models.Project{ID: ProjectIdInt}).First(&project)
+	projectConfig := models.ProjectConfig{ProjectId: project.ID, ProjectName: project.Name, ApiKey: project.ApiKey, DeviceType: project.DeviceType}
 
 	var fileName = "config.json"
 	var filePath = "/tmp/" + fileName
@@ -179,16 +179,16 @@ func DownloadConfig(w http.ResponseWriter, r *http.Request) {
 func DeleteProject(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vars := mux.Vars(r)
-	projectId := vars["projectId"]
+	ProjectId := vars["projectId"]
 
-	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
+	if ProjectIdInt, err := strconv.Atoi(ProjectId); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&err)
 	} else {
 		var project models.Project
 		var devices []models.Device
-		db.Where(models.Project{Id: projectIdInt}).First(&project)
-		db.Where(models.Device{ProjectId: project.Id}).Find(&devices)
+		db.Where(models.Project{ID: ProjectIdInt}).First(&project)
+		db.Where(models.Device{ProjectId: project.ID}).Find(&devices)
 		for _,v := range devices {
 			var apps []models.App
 			db.Where(models.App{Uuid: v.Uuid}).Find(&apps)
@@ -199,6 +199,103 @@ func DeleteProject(w http.ResponseWriter, r *http.Request) {
 		}
 
 		db.Delete(&project)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func ListProjectEnv(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&err)
+	} else {
+		var listEnv []models.ProjectEnv
+		db.Where(models.ProjectEnv{ProjectID:projectIdInt}).Find(&listEnv)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(&listEnv)
+	}
+}
+
+//Add project env variable
+//Params ProjectId, key, value
+func AddProjectEnv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+
+	var newEnv models.ProjectEnv
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &newEnv); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+    var project models.Project
+    if db.Where(models.Project{ID: newEnv.ProjectID}).First(&project).RecordNotFound() {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    } else {
+        if clientApiKey[0] != project.ApiKey {
+            w.WriteHeader(http.StatusForbidden)
+            return
+        } else {
+        	var oldEnv []models.ProjectEnv
+        	db.Where(models.ProjectEnv{ProjectID: project.ID}).Find(&oldEnv)
+
+        	envExist := false
+        	for _, v := range oldEnv {
+        		if v.Key == newEnv.Key {
+        			envExist = true
+        		}
+        	}
+
+        	if !envExist {
+            	if dbc := db.Create(&newEnv); dbc.Error != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				} else {
+					w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+					w.WriteHeader(http.StatusCreated)
+					if err := json.NewEncoder(w).Encode(&newEnv); err != nil {
+						log.Println(err)
+						return
+					}
+				}
+        	}
+        }
+    }
+}
+
+func DeleteProjectEnv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	envId := vars["envId"]
+
+	if envIdInt, err := strconv.Atoi(envId); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&err)
+	} else {
+		db.Where(models.ProjectEnv{ID: envIdInt}).Delete(&models.ProjectEnv{})
 		w.WriteHeader(http.StatusOK)
 	}
 }
