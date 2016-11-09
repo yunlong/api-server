@@ -49,7 +49,7 @@ func UpdateApp(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var appUpdate models.App
-		rowUpdated := db.Model(&appUpdate).Where(models.App{Uuid: app.Uuid}).UpdateColumn(models.App{Commit: app.Commit, ContainerId: app.ContainerId, Env: app.Env, ImageId: app.ImageId}).RowsAffected
+		rowUpdated := db.Model(&appUpdate).Where(models.App{Uuid: app.Uuid}).UpdateColumn(models.App{Commit: app.Commit, ContainerId: app.ContainerId, Port: app.Port, ImageId: app.ImageId}).RowsAffected
 
 		if rowUpdated > 0 {
 			w.WriteHeader(http.StatusOK)
@@ -83,10 +83,10 @@ func CreateApp(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		appCreate := models.App{
-			Uuid:             app.Uuid,
+			Uuid:        app.Uuid,
 			Commit:      app.Commit,
 			ContainerId: app.ContainerId,
-			Env:         app.Env,
+			Port:        app.Port,
 			ImageId:     app.ImageId,
 		}
 

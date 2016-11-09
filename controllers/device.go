@@ -33,22 +33,22 @@ func ListDeviceByProject(w http.ResponseWriter, r *http.Request) {
 
 func GetDeviceById(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    ProjectId := vars["projectId"]
-    deviceID := vars["deviceID"]
+    projectId := vars["projectId"]
+    deviceID := vars["deviceId"]
 
     var deviceDetail models.Device
 
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    if ProjectIdInt, err := strconv.Atoi(ProjectId); err != nil {
+    if projectIdInt, err := strconv.Atoi(projectId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
-        if DeviceIDInt, err := strconv.Atoi(deviceID); err != nil {
+        if deviceIDInt, err := strconv.Atoi(deviceID); err != nil {
             w.WriteHeader(http.StatusBadRequest)
             json.NewEncoder(w).Encode(&err)
         } else {
             w.WriteHeader(http.StatusOK)
-            if !db.Where(models.Device{ProjectId: ProjectIdInt, ID: DeviceIDInt}).First(&deviceDetail).RecordNotFound() {
+            if !db.Where(models.Device{ProjectId: projectIdInt, ID: deviceIDInt}).First(&deviceDetail).RecordNotFound() {
                 json.NewEncoder(w).Encode(&deviceDetail)
             }    
         }
@@ -114,7 +114,17 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                 w.Header().Set("Content-Type", "application/json; charset=UTF-8")
                 w.WriteHeader(http.StatusCreated)
 
-                bodyResponse := models.DeviceReturn{Id: deviceCreate.ID, Name: deviceCreate.Name,ProjectId: deviceCreate.ProjectId,Uuid:deviceCreate.Uuid,DeviceType:deviceCreate.DeviceType}
+                //bodyResponse := models.DeviceReturn{Id: deviceCreate.ID, Name: deviceCreate.Name,ProjectId: deviceCreate.ProjectId,Uuid:deviceCreate.Uuid,DeviceType:deviceCreate.DeviceType}
+                var projectEnv []models.ProjectEnv
+                db.Where(models.ProjectEnv{ProjectID: project.ID}).Find(&projectEnv)
+                var penvs []models.Environment
+                for _, v := range projectEnv {
+                    var env models.Environment
+                    env.Name = v.Key
+                    env.Value = v.Value
+                    penvs = append(penvs, env)
+                }
+                bodyResponse := models.RegisterSuccess{DeviceId: deviceCreate.ID, Image: project.Repository, Port: project.Port, Environments: penvs}
                 if err := json.NewEncoder(w).Encode(&bodyResponse); err != nil {
                     panic(err)
                 }
@@ -278,7 +288,7 @@ func UpdateProgress(w http.ResponseWriter, r *http.Request) {
 func CheckUpdate(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     ProjectId := vars["projectId"]
-    deviceID := vars["deviceID"]
+    deviceID := vars["deviceId"]
 
     ProjectIdInt, err := strconv.Atoi(ProjectId); if err != nil {
         w.WriteHeader(http.StatusBadRequest)
@@ -343,7 +353,7 @@ func DeviceOnline(w http.ResponseWriter, r *http.Request) {
 func UpdateDeviceName(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
-    deviceID := vars["deviceID"]
+    deviceID := vars["deviceId"]
 
     deviceIDInt, err := strconv.Atoi(deviceID); if err != nil {
         w.WriteHeader(http.StatusBadRequest)

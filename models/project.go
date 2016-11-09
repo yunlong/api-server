@@ -10,6 +10,7 @@ type Project struct {
 	ApiKey     	    string 	 	`json:"apiKey"`
 	Commit     	    string 	 	`json:"commit"`
 	Repository 	    string 	 	`json:"repository"`
+	Port 			string 		`json:"port"`
 	DeviceTotal 	int 	 	`json:"deviceTotal"`
 	Environment		[]ProjectEnv `json:"environment"`
 }
@@ -22,7 +23,7 @@ type ProjectConfig struct {
 }
 
 type ProjectEnv struct {
-	ID      	int 	`sql:"AUTO_INCREMENT" json:"id"`
+	ID 			int 	`sql:"AUTO_INCREMENT" json:"id"`
     ProjectID  	int     `gorm:"index" json:"projectId"`
     Key 		string 	`json:"key"`
 	Value 		string 	`json:"value"`

@@ -20,6 +20,7 @@ type Device struct {
 	UpdatePending 	     bool      `json:"updatePending,omitempty"`
 	UpdateDownloaded     bool      `json:"updateDownloaded,omitempty"`
 	UpdateFailed 	     bool      `json:"updateFailed,omitempty"`
+	Environment			 []DeviceEnv `json:"environment"`
 }
 
 type DeviceReturn struct {
@@ -56,4 +57,24 @@ type DeviceOnline struct {
 
 type DeviceEditName struct {
 	Name 	string 		`json:"name"`
+}
+
+type DeviceEnv struct {
+	ID 			int 	`sql:"AUTO_INCREMENT" json:"id"`
+    DeviceID  	int     `gorm:"index" json:"deviceId"`
+    Key 		string 	`json:"key"`
+	Value 		string 	`json:"value"`
+}
+
+type RegisterSuccess struct {
+	DeviceId 	int		`json:"deviceId"`
+	Image 		string	`json:"image"`
+	Port 		string 	`json:"port"`
+	Environments	[]Environment `json:"environments"`
+	RegisterAt 	int		`json:"registerAt"`
+}
+
+type Environment struct {
+	Name   	string `json:"name"`
+	Value   string `json:"value"`
 }

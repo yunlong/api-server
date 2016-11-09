@@ -4,6 +4,8 @@ import (
     "encoding/json"
     "net/http"
     "log"
+    "os"
+    "io"
     "io/ioutil"
     "strconv"
     "fmt"
@@ -11,9 +13,8 @@ import (
     "github.com/deviceMP/api-server/models"
     //"github.com/deviceMP/api-server/utils"
     "github.com/gorilla/mux"
-    "io"
     "github.com/deviceMP/api-server/utils"
-    "os"
+    
 )
 
 func ListOrg(w http.ResponseWriter, r *http.Request) {
@@ -133,16 +134,20 @@ func DeleteOrg(w http.ResponseWriter, r *http.Request) {
         json.NewEncoder(w).Encode(&err)
     } else {
         var org models.Org
-        var devices []models.Device
-        db.Where(models.Org{ID: OrgIdInt}).First(&org)
-        db.Where(models.Device{ProjectId: org.ID}).Find(&devices)
-        for _,v := range devices {
-            var apps []models.App
-            db.Where(models.App{Uuid: v.Uuid}).Find(&apps)
-            for _,v := range apps {
+        var projects []models.Project
+
+        db.Where(models.Project{OrgId: OrgIdInt}).Find(&projects)
+        for _,v := range projects {
+            var devices []models.Device
+            db.Where(models.Device{ProjectId: v.ID}).Find(&devices)
+            for _,v := range devices {
+                var apps []models.App
+                db.Where(models.App{Uuid: v.Uuid}).Find(&apps)
+                for _,v := range apps {
+                    db.Delete(&v)
+                }
                 db.Delete(&v)
             }
-            db.Delete(&v)
         }
 
         db.Delete(&org)

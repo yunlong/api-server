@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"encoding/json"
-	"net/http"
 	"log"
 	"io"
-	"io/ioutil"
-	"bufio"
 	"os"
+	"bufio"
 	"strconv"
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
 
-	"github.com/deviceMP/api-server/models"
+	"github.com/go-resty/resty"
 	"github.com/gorilla/mux"
+	"github.com/deviceMP/api-server/models"
 	"github.com/deviceMP/api-server/utils"
 )
 
@@ -94,7 +95,9 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			DeviceType: 	project.DeviceType,
 			ApiKey:     	utils.RandStringRunes(32),
 			Commit:    		"",
+			Port:			project.Port,
 			Repository: 	project.Repository,
+			Environment: 	project.Environment,
 		}
 
 		if dbc := db.Create(&projectCreate); dbc.Error != nil {
@@ -132,7 +135,32 @@ func UpdateProject(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var projectUpdate models.Project
 		db.Model(&projectUpdate).Where(models.Project{ID: project.ID}).UpdateColumn(models.Project{Name: project.Name,
-			Description: project.Description,Image:project.Image,Repository:project.Repository})
+			Description: project.Description,Image:project.Image,Repository:project.Repository, Port:project.Port})
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func UpdateProjectApp(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var project models.Project
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+	if err != nil {
+		panic(err)
+		return
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+		return
+	}
+	if err := json.Unmarshal(body, &project); err != nil {
+		w.WriteHeader(422)
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+			return
+		}
+	} else {
+		var projectUpdate models.Project
+		db.Model(&projectUpdate).Where(models.Project{ID: project.ID}).UpdateColumn(models.Project{Repository:project.Repository, Port: project.Port})
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -286,16 +314,171 @@ func AddProjectEnv(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func DeleteProjectEnv(w http.ResponseWriter, r *http.Request) {
+func UpdateProjectEnv(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	vars := mux.Vars(r)
-	envId := vars["envId"]
 
-	if envIdInt, err := strconv.Atoi(envId); err != nil {
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+
+	var newEnv models.ProjectEnv
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &newEnv); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&err)
 	} else {
-		db.Where(models.ProjectEnv{ID: envIdInt}).Delete(&models.ProjectEnv{})
-		w.WriteHeader(http.StatusOK)
+		var project models.Project
+		if db.Where(models.Project{ID: projectIdInt}).First(&project).RecordNotFound() {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		} else {
+				if clientApiKey[0] != project.ApiKey {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			} else {
+				var oldEnv models.ProjectEnv
+				rowUpdated := db.Where(models.ProjectEnv{ID: newEnv.ID}).First(&oldEnv).UpdateColumn(models.ProjectEnv{Value: newEnv.Value}).RowsAffected
+
+				if rowUpdated > 0 {
+					w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+					w.WriteHeader(http.StatusOK)
+				} else {
+					w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			}
+		}
 	}
+}
+
+func DeleteProjectEnv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+
+	var newEnv models.ProjectEnv
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &newEnv); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&err)
+	} else {
+		var project models.Project
+		if db.Where(models.Project{ID: projectIdInt}).First(&project).RecordNotFound() {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		} else {
+				if clientApiKey[0] != project.ApiKey {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			} else {
+				db.Where(models.ProjectEnv{ID: newEnv.ID}).Delete(&models.ProjectEnv{})
+				w.WriteHeader(http.StatusOK)
+			}
+		}
+	}
+}
+
+func UpdateProjectAppEnv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	projectId := vars["projectId"]
+
+	clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+
+	if projectIdInt, err := strconv.Atoi(projectId); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(&err)
+	} else {
+		var project models.Project
+		if db.Where(models.Project{ID: projectIdInt}).First(&project).RecordNotFound() {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		} else {
+				if clientApiKey[0] != project.ApiKey {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			} else {
+				//Update all device running on this project
+
+				var deviceUpdate []models.Device
+				db.Where(models.Device{ProjectId: project.ID}).Find(&deviceUpdate)
+				for _,v := range deviceUpdate {
+					var appUpdate models.AppUpdate
+					endpoint := "http://" + v.IpAddress + ":8080"
+					var pEnv []models.ProjectEnv
+					db.Where(models.ProjectEnv{ProjectID: project.ID}).Find(&pEnv)
+					var envs []models.Environment
+					for _,v := range pEnv {
+						envs = append(envs, models.Environment{Name: v.Key, Value: v.Value})
+					}
+					appUpdate.ImageId = project.Repository
+					appUpdate.Port = project.Port
+					appUpdate.Environment = envs
+					go callAgentUpdate(endpoint, project.ApiKey, appUpdate)
+				}
+
+				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+				w.WriteHeader(http.StatusOK)
+			}
+		}
+	}
+}
+
+func callAgentUpdate(endpoint, apikey string, app models.AppUpdate) (err error) {
+	_, err = resty.R().
+		SetQueryString("apikey="+apikey).
+		SetHeader("Content-Type", "application/json").
+		SetBody(app).
+		Post(endpoint + "/v1/updateenv")
+	return err
 }

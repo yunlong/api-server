@@ -14,18 +14,21 @@ var Routes = m.Routes{
 	m.Route{"CreateOrg", "POST", "/org", c.CreateOrg},
 	m.Route{"UploadOrgImage", "POST", "/orgimage", c.UploadOrgImage},
 	m.Route{"GetOrg", "GET", "/org/{orgId}", c.GetOrg},
-	m.Route{"DeleteOrg", "POST", "/org/{orgId}", c.DeleteOrg},
+	m.Route{"DeleteOrg", "POST", "/org/delete/{orgId}", c.DeleteOrg},
 
 	//Project
 	m.Route{"ListProjectByOrg", "GET", "/org/{orgId}/project", c.ListProjectByOrg},
 	m.Route{"CreateProject", "POST", "/org/{orgId}/project", c.CreateProject},
 	m.Route{"UpdateProject", "POST", "/org/{orgId}/updateproject", c.UpdateProject},
+	m.Route{"UpdateProjectApp", "POST", "/org/{orgId}/updateprojectapp", c.UpdateProjectApp},
 	m.Route{"GetProject", "GET", "/org/{orgId}/project/{projectId}", c.GetProject},
 	m.Route{"DConfig", "GET", "/org/{orgId}/download/{projectId}", c.DownloadConfig},
 	m.Route{"DeleteProject", "POST", "/org/{orgId}/delete/{projectId}", c.DeleteProject},
 	m.Route{"ListProjectEnv", "GET", "/org/{orgId}/project/{projectId}/env", c.ListProjectEnv},
 	m.Route{"AddProjectEnv", "POST", "/org/{orgId}/project/{projectId}/env", c.AddProjectEnv},
-	m.Route{"DeleteProjectEnv", "POST", "/deleteenv/{envId}", c.DeleteProjectEnv},
+	m.Route{"UpdateProjectEnv", "POST", "/updateenv/{projectId}", c.UpdateProjectEnv},
+	m.Route{"DeleteProjectEnv", "POST", "/deleteenv/{projectId}", c.DeleteProjectEnv},
+	m.Route{"UpdateProjectAppEnv", "POST", "/updateappenv/{projectId}", c.UpdateProjectAppEnv},
 
 	//Device
 	m.Route{"DeviceOnline", "POST", "/org/{orgId}/project/{projectId}/device/online", c.DeviceOnline},
@@ -51,7 +54,7 @@ func main() {
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
 	router := NewRouter()
-    	log.Fatal(http.ListenAndServe(":8080", router))
+    log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func NewRouter() *mux.Router {
