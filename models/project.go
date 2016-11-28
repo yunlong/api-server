@@ -11,11 +11,13 @@ type Project struct {
 	Commit     	    string 	 	`json:"commit"`
 	Repository 	    string 	 	`json:"repository"`
 	Port 			string 		`json:"port"`
+	Privileged 		bool 		`json:"privileged"`
 	DeviceTotal 	int 	 	`json:"deviceTotal"`
 	Environment		[]ProjectEnv `json:"environment"`
 }
 
 type ProjectConfig struct {
+	OrgId 			int 	`json:"orgId"`
 	ProjectName 	string 	`json:"projectName"`
 	ProjectId 		int 	`json:"projectId"`
 	ApiKey 			string  `json:"apikey"`

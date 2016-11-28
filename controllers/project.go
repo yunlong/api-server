@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"encoding/json"
 
-	"github.com/go-resty/resty"
 	"github.com/gorilla/mux"
 	"github.com/deviceMP/api-server/models"
 	"github.com/deviceMP/api-server/utils"
@@ -94,8 +93,9 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			Image:     		project.Image,
 			DeviceType: 	project.DeviceType,
 			ApiKey:     	utils.RandStringRunes(32),
-			Commit:    		"",
+			Commit:    		project.Commit,
 			Port:			project.Port,
+			Privileged:		project.Privileged,
 			Repository: 	project.Repository,
 			Environment: 	project.Environment,
 		}
@@ -159,9 +159,22 @@ func UpdateProjectApp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		var projectUpdate models.Project
-		db.Model(&projectUpdate).Where(models.Project{ID: project.ID}).UpdateColumn(models.Project{Repository:project.Repository, Port: project.Port})
+		//log.Println(project.Privileged)
+		var update models.Project
+		db.Where(models.Project{ID: project.ID}).First(&update)
+		update.Repository = project.Repository
+		update.Port = project.Port
+		update.Privileged = project.Privileged
+		update.Commit = project.Commit
+		db.Save(&update)
+		//rowUpdated := db.Where(models.Project{ID: project.ID}).First(&update).UpdateColumns(models.Project{Repository: project.Repository, Port: project.Port, Privileged: project.Privileged}).RowsAffected
+		//if rowUpdated > 0 {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
+		/*} else {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.WriteHeader(http.StatusInternalServerError)
+		}*/
 	}
 }
 
@@ -177,7 +190,7 @@ func DownloadConfig(w http.ResponseWriter, r *http.Request) {
 
 	var project models.Project
 	db.Where(models.Project{ID: ProjectIdInt}).First(&project)
-	projectConfig := models.ProjectConfig{ProjectId: project.ID, ProjectName: project.Name, ApiKey: project.ApiKey, DeviceType: project.DeviceType}
+	projectConfig := models.ProjectConfig{OrgId: project.OrgId, ProjectId: project.ID, ProjectName: project.Name, ApiKey: project.ApiKey, DeviceType: project.DeviceType}
 
 	var fileName = "config.json"
 	var filePath = "/tmp/" + fileName
@@ -449,22 +462,10 @@ func UpdateProjectAppEnv(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				//Update all device running on this project
-
 				var deviceUpdate []models.Device
 				db.Where(models.Device{ProjectId: project.ID}).Find(&deviceUpdate)
 				for _,v := range deviceUpdate {
-					var appUpdate models.AppUpdate
-					endpoint := "http://" + v.IpAddress + ":8080"
-					var pEnv []models.ProjectEnv
-					db.Where(models.ProjectEnv{ProjectID: project.ID}).Find(&pEnv)
-					var envs []models.Environment
-					for _,v := range pEnv {
-						envs = append(envs, models.Environment{Name: v.Key, Value: v.Value})
-					}
-					appUpdate.ImageId = project.Repository
-					appUpdate.Port = project.Port
-					appUpdate.Environment = envs
-					go callAgentUpdate(endpoint, project.ApiKey, appUpdate)
+					go callAgentUpdateEnv(v.Uuid)
 				}
 
 				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -474,11 +475,6 @@ func UpdateProjectAppEnv(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func callAgentUpdate(endpoint, apikey string, app models.AppUpdate) (err error) {
-	_, err = resty.R().
-		SetQueryString("apikey="+apikey).
-		SetHeader("Content-Type", "application/json").
-		SetBody(app).
-		Post(endpoint + "/v1/updateenv")
-	return err
+func callAgentUpdateEnv(deviceUuid string){
+	PushActionAgent(deviceUuid, RestartDeviceApp)
 }

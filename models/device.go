@@ -15,8 +15,8 @@ type Device struct {
 	Commit               string    `json:"commit"`
 	Status 		     	 string    `json:"status"`
 	ProvisioningState    string    `json:"provisioningState,omitempty"`
-	ProvisioningProgress int       `json:"provisioningProgress,omitempty"`
-	DownloadProgress     int       `json:"downloadProgress,omitempty"`
+	ProvisioningProgress int       `json:"provisioningProgress"`
+	DownloadProgress     int       `json:"downloadProgress"`
 	UpdatePending 	     bool      `json:"updatePending,omitempty"`
 	UpdateDownloaded     bool      `json:"updateDownloaded,omitempty"`
 	UpdateFailed 	     bool      `json:"updateFailed,omitempty"`
@@ -70,8 +70,10 @@ type RegisterSuccess struct {
 	DeviceId 	int		`json:"deviceId"`
 	Image 		string	`json:"image"`
 	Port 		string 	`json:"port"`
+	Privileged  bool 	`json:"privileged"`
 	Environments	[]Environment `json:"environments"`
 	RegisterAt 	int		`json:"registerAt"`
+	Commit 		string 	`json:"commit"`
 }
 
 type Environment struct {

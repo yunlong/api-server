@@ -99,6 +99,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                 ProjectId:  device.ProjectId,
                 IsOnline:   true,
                 LastSeen:   t,
+                Commit:     project.Commit,
                 PublicIP:   device.PublicIP,
                 IpAddress:  device.IpAddress,
             }
@@ -124,7 +125,7 @@ func RegisterDevice(w http.ResponseWriter, r *http.Request) {
                     env.Value = v.Value
                     penvs = append(penvs, env)
                 }
-                bodyResponse := models.RegisterSuccess{DeviceId: deviceCreate.ID, Image: project.Repository, Port: project.Port, Environments: penvs}
+                bodyResponse := models.RegisterSuccess{DeviceId: deviceCreate.ID, Image: project.Repository, Port: project.Port, Privileged: project.Privileged, Environments: penvs, Commit: project.Commit}
                 if err := json.NewEncoder(w).Encode(&bodyResponse); err != nil {
                     panic(err)
                 }
@@ -261,7 +262,7 @@ func UpdateProgress(w http.ResponseWriter, r *http.Request) {
             return
         }
     }
-
+    //log.Println(deviceState)
     //Checking app and apikey valID with all request -> common func
     var project models.Project
     var deviceUpdate models.Device
@@ -277,15 +278,17 @@ func UpdateProgress(w http.ResponseWriter, r *http.Request) {
                 w.WriteHeader(http.StatusNotFound)
                 return
             } else {
-                db.Model(&deviceUpdate).Updates(models.Device{DownloadProgress: deviceState.Progress})
-                w.WriteHeader(http.StatusCreated)
+                deviceUpdate.DownloadProgress = deviceState.Progress
+                db.Save(&deviceUpdate)
+                w.WriteHeader(http.StatusOK)
                 return
             }
         }
     }
 }
 
-func CheckUpdate(w http.ResponseWriter, r *http.Request) {
+func CheckAppUpdate(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     vars := mux.Vars(r)
     ProjectId := vars["projectId"]
     deviceID := vars["deviceId"]
@@ -302,7 +305,8 @@ func CheckUpdate(w http.ResponseWriter, r *http.Request) {
     var deviceCheck models.Device
     db.Where(models.Device{ProjectId: ProjectIdInt, ID: deviceIDInt}).First(&deviceCheck)
 
-    result := map[string]interface{}{
+    log.Println(deviceMap[deviceCheck.Uuid])
+    /*result := map[string]interface{}{
         "deviceID":  deviceCheck.ID,
         "status": deviceCheck.Status,
     }
@@ -312,7 +316,7 @@ func CheckUpdate(w http.ResponseWriter, r *http.Request) {
 
     if err := json.NewEncoder(w).Encode(&result); err != nil {
         panic(err)
-    }
+    }*/
 }
 
 //Params: OrgID & DeviceID
@@ -388,5 +392,118 @@ func UpdateDeviceName(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
     } else {
         w.WriteHeader(http.StatusInternalServerError)
+    }
+}
+
+func UpdateDeviceVersion(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+
+    clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+    var deviceState models.DeviceState
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &deviceState); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+    var project models.Project
+    var deviceUpdate models.Device
+    if db.Where(models.Project{ID: deviceState.ProjectId}).First(&project).RecordNotFound() {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    } else {
+        if clientApiKey[0] != project.ApiKey {
+            w.WriteHeader(http.StatusForbidden)
+            return
+        } else {
+            if db.Where(models.Device{ID: deviceState.DeviceId}).First(&deviceUpdate).RecordNotFound() {
+                w.WriteHeader(http.StatusNotFound)
+                return
+            } else {
+                deviceUpdate.Commit = deviceState.State
+                db.Save(&deviceUpdate)
+                w.WriteHeader(http.StatusOK)
+                if err := json.NewEncoder(w).Encode(http.StatusOK); err != nil {
+                    log.Println(err)
+                }
+                return
+            }
+        }
+    }
+}
+
+func UpdateLatestVersion(w http.ResponseWriter, r *http.Request) {
+    log.Println("FUCKKKKK")
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+
+    clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+    var deviceState models.DeviceState
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &deviceState); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+    var project models.Project
+    var deviceUpdate models.Device
+    if db.Where(models.Project{ID: deviceState.ProjectId}).First(&project).RecordNotFound() {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    } else {
+        if clientApiKey[0] != project.ApiKey {
+            w.WriteHeader(http.StatusForbidden)
+            return
+        } else {
+            if db.Where(models.Device{ID: deviceState.DeviceId}).First(&deviceUpdate).RecordNotFound() {
+                w.WriteHeader(http.StatusNotFound)
+                return
+            } else {
+                var appUpdate models.App
+                rowUpdated := db.Model(&appUpdate).Where(models.App{Uuid: deviceUpdate.Uuid}).UpdateColumn(models.App{Latest: deviceState.State}).RowsAffected
+
+                w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+                if rowUpdated > 0 {
+                    w.WriteHeader(http.StatusOK)
+                } else {
+                    w.WriteHeader(http.StatusInternalServerError)
+                }
+                if err := json.NewEncoder(w).Encode(http.StatusOK); err != nil {
+                    log.Println(err)
+                }
+                return
+            }
+        }
     }
 }

@@ -1,12 +1,13 @@
 package models
 
-type App struct {
+type App struct {	
+	ID 				int				`sql:"AUTO_INCREMENT" json:"id"`
 	Uuid      		string 			`json:"uuid"`
-	Commit      	string			`json:"commit,omitempty"`
-	ContainerId 	string			`json:"containerId,omitempty"`
-	Port 			string 			`json:"port,omitempty"`
-	ImageId     	string			`json:"imageId,omitempty"`
-	Latest 			string 			`json:"latest,omitempty"`
+	Commit      	string			`json:"commit"`
+	ContainerId 	string			`json:"containerId"`
+	ImageId     	string			`json:"imageId"`
+	Port 			string 			`json:"port"`
+	Latest 			string 			`json:"latest"`
 }
 
 type AppUpdate struct {

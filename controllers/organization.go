@@ -4,14 +4,12 @@ import (
     "encoding/json"
     "net/http"
     "log"
-    "os"
     "io"
     "io/ioutil"
     "strconv"
     "fmt"
 
     "github.com/deviceMP/api-server/models"
-    //"github.com/deviceMP/api-server/utils"
     "github.com/gorilla/mux"
     "github.com/deviceMP/api-server/utils"
     
@@ -91,7 +89,6 @@ func CreateOrg(w http.ResponseWriter, r *http.Request) {
 func UploadOrgImage(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
 
-    //log.Println(r.Body)
     file, handler, err := r.FormFile("file")
     if err != nil {
         fmt.Println(err)
@@ -101,25 +98,26 @@ func UploadOrgImage(w http.ResponseWriter, r *http.Request) {
         if err != nil {
             fmt.Println(err)
         }
-
-        reName := utils.RenameImage(handler.Filename, 6)
-        imageFolderPath := os.Getenv("HOME") + "/" + "api-images"
-        if _, err := os.Stat(imageFolderPath); os.IsNotExist(err) {
-            os.Mkdir(imageFolderPath, 0777)
-        }
-
-        err = ioutil.WriteFile(imageFolderPath + "/" + reName, data, 0777)
+        var filePath string = "/tmp/projectimage"
+        err = ioutil.WriteFile(filePath, data, 0777)
         if err != nil {
             fmt.Println(err)
         }
-        reData := map[string]interface{}{
-            "filename": reName,
-        }
 
-        w.WriteHeader(http.StatusOK)
-        if err := json.NewEncoder(w).Encode(&reData); err != nil {
+        reName := utils.RenameImage(handler.Filename, 6)
+        linkFile, err := utils.UploadToS3("images",reName, filePath)
+        if err != nil {
             log.Println(err)
-            return
+            w.WriteHeader(http.StatusBadRequest)
+        } else {
+            reData := map[string]interface{}{
+                "filename": linkFile,
+            }
+            w.WriteHeader(http.StatusOK)
+            if err := json.NewEncoder(w).Encode(&reData); err != nil {
+                log.Println(err)
+                return
+            }
         }
     }
 }
@@ -129,14 +127,15 @@ func DeleteOrg(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     orgId := vars["orgId"]
 
-    if OrgIdInt, err := strconv.Atoi(orgId); err != nil {
+    if orgIdInt, err := strconv.Atoi(orgId); err != nil {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(&err)
     } else {
         var org models.Org
+        db.Where(models.Org{ID: orgIdInt}).First(&org)
         var projects []models.Project
 
-        db.Where(models.Project{OrgId: OrgIdInt}).Find(&projects)
+        db.Where(models.Project{OrgId: orgIdInt}).Find(&projects)
         for _,v := range projects {
             var devices []models.Device
             db.Where(models.Device{ProjectId: v.ID}).Find(&devices)

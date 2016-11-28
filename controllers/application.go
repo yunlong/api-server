@@ -18,16 +18,12 @@ func GetApp(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	var appGet models.App
-	if !db.Where(models.App{Uuid: deviceId}).First(&appGet).RecordNotFound() {
+	var appGet []models.App
+	if !db.Where(models.App{Uuid: deviceId}).Find(&appGet).RecordNotFound() {
 		json.NewEncoder(w).Encode(&appGet)
 	}
 }
 
-// Api to update application when commit
-// Case demo: Use this api to update apps and agent get app had updated and do update strategy on device.
-// Only change commit value because if agent seen the commit had changed, it will be pull latest image from docker hub and do update.
-// TODO: When user commit code, need to trigger and build, push image to docker hub done --> call api UpdateApp.
 func UpdateApp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var app models.App
@@ -48,18 +44,19 @@ func UpdateApp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		var appUpdate models.App
-		rowUpdated := db.Model(&appUpdate).Where(models.App{Uuid: app.Uuid}).UpdateColumn(models.App{Commit: app.Commit, ContainerId: app.ContainerId, Port: app.Port, ImageId: app.ImageId}).RowsAffected
+		var update models.App
+		db.Where(models.App{Uuid: app.Uuid}).First(&update)
+		update.Commit = app.Commit
+		update.ContainerId = app.ContainerId
+		update.Port = app.Port
+		update.ImageId = app.ImageId
+		db.Save(&update)
 
-		if rowUpdated > 0 {
-			w.WriteHeader(http.StatusOK)
-			if err := json.NewEncoder(w).Encode(&appUpdate); err != nil {
-				panic(err)
-			}
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
+		//rowUpdated := db.Model(&appUpdate).UpdateColumn(models.App{Commit: app.Commit, ContainerId: app.ContainerId, Port: app.Port, ImageId: app.ImageId}).RowsAffected
+		w.WriteHeader(http.StatusOK)
+        return
+		
+		//return
 	}
 }
 
@@ -88,6 +85,7 @@ func CreateApp(w http.ResponseWriter, r *http.Request) {
 			ContainerId: app.ContainerId,
 			Port:        app.Port,
 			ImageId:     app.ImageId,
+			Latest: 	 app.Latest,
 		}
 
 		if dbc := db.Create(&appCreate); dbc.Error != nil {
@@ -118,5 +116,32 @@ func DeleteApp(w http.ResponseWriter, r *http.Request) {
 	db.Where(models.App{Uuid: deviceId}).First(&appDelete)
 	db.Delete(&appDelete)
 
+	w.WriteHeader(http.StatusOK)
+}
+
+func UpdateAppEnv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	deviceUuid := vars["deviceuuid"]
+
+	PushActionAgent(deviceUuid, RestartDeviceApp)
+	w.WriteHeader(http.StatusOK)
+}
+
+func CheckForUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	deviceUuid := vars["deviceuuid"]
+
+	PushActionAgent(deviceUuid, CheckUpdate)
+	w.WriteHeader(http.StatusOK)
+}
+
+func InstallAppUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	deviceUuid := vars["deviceuuid"]
+
+	PushActionAgent(deviceUuid, InstallUpdate)
 	w.WriteHeader(http.StatusOK)
 }
