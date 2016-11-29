@@ -1,14 +1,9 @@
 package controllers
 
 import (
-    //"bufio"
-	//"io"
 	"flag"
 	"log"
 	"net/http"
-	//"os"
-	//"strconv"
-	//"strings"
 	"time"
 
 	"github.com/deviceMP/api-server/models"
@@ -69,7 +64,6 @@ func ConnectivityListen(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		//deviceAction := deviceMap[string(message)]
-		log.Printf("recv: %s", deviceMap[string(message)])
 		CheckDeviceOnline(string(message))
 		err = c.WriteMessage(mt, []byte(deviceMap[string(message)]))
 		if err != nil {
@@ -138,11 +132,6 @@ func SetDeviceOffline() {
 		deviceMapOffline[k] = false
 	}
 }
-
-/*func isTransportOver(data string) (over bool) {
-	over = strings.HasSuffix(data, "\r\n\r\n")
-	return
-}*/
 
 func PushActionAgent(deviceUuid, action string) {
 	deviceMap[deviceUuid] = action

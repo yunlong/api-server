@@ -304,19 +304,6 @@ func CheckAppUpdate(w http.ResponseWriter, r *http.Request) {
 
     var deviceCheck models.Device
     db.Where(models.Device{ProjectId: ProjectIdInt, ID: deviceIDInt}).First(&deviceCheck)
-
-    log.Println(deviceMap[deviceCheck.Uuid])
-    /*result := map[string]interface{}{
-        "deviceID":  deviceCheck.ID,
-        "status": deviceCheck.Status,
-    }
-
-    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-    w.WriteHeader(http.StatusCreated)
-
-    if err := json.NewEncoder(w).Encode(&result); err != nil {
-        panic(err)
-    }*/
 }
 
 //Params: OrgID & DeviceID
@@ -449,7 +436,6 @@ func UpdateDeviceVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateLatestVersion(w http.ResponseWriter, r *http.Request) {
-    log.Println("FUCKKKKK")
     w.Header().Set("Access-Control-Allow-Origin", "*")
 
     clientApiKey := r.URL.Query()["apikey"]

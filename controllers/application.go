@@ -52,11 +52,8 @@ func UpdateApp(w http.ResponseWriter, r *http.Request) {
 		update.ImageId = app.ImageId
 		db.Save(&update)
 
-		//rowUpdated := db.Model(&appUpdate).UpdateColumn(models.App{Commit: app.Commit, ContainerId: app.ContainerId, Port: app.Port, ImageId: app.ImageId}).RowsAffected
 		w.WriteHeader(http.StatusOK)
         return
-		
-		//return
 	}
 }
 

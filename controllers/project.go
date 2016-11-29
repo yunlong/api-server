@@ -465,7 +465,7 @@ func UpdateProjectAppEnv(w http.ResponseWriter, r *http.Request) {
 				var deviceUpdate []models.Device
 				db.Where(models.Device{ProjectId: project.ID}).Find(&deviceUpdate)
 				for _,v := range deviceUpdate {
-					go callAgentUpdateEnv(v.Uuid)
+					go callAgentUpdateEnv(v.Uuid, project.Commit)
 				}
 
 				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -475,6 +475,8 @@ func UpdateProjectAppEnv(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func callAgentUpdateEnv(deviceUuid string){
+func callAgentUpdateEnv(deviceUuid, version string) {
 	PushActionAgent(deviceUuid, RestartDeviceApp)
+	var device models.Device
+	db.Where(models.Device{Uuid: deviceUuid}).First(&device).UpdateColumn(models.Device{Commit: version})
 }
