@@ -15,3 +15,10 @@ type AppUpdate struct {
 	Port 		string 			`json:"port"`
 	Environment	[]Environment   `json:"environments"`
 }
+
+type DataTransfer struct {
+	DeviceUuid 	string 		`json:"deviceUuid"`
+	EnableLog	bool	 	`json:"enableLog"`
+	Logs 		string		`json:"logs"`
+	Action 		string 		`json:"action"`
+}

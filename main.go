@@ -40,6 +40,7 @@ var Routes = m.Routes{
 	m.Route{"UpdateProgress", "POST", "/updateprogress", c.UpdateProgress},
 	m.Route{"UpdateDeviceVersion", "POST", "/updateversion", c.UpdateDeviceVersion}, //Update application version of device
 	m.Route{"UpdateLatestVersion", "POST", "/updatelatestversion", c.UpdateLatestVersion},
+	m.Route{"UpdateIPAddress", "POST", "/updateipaddress", c.UpdateIPAddress},
 	m.Route{"CheckAppUpdate", "POST", "/checkupdate/{projectId}/{deviceId}", c.CheckAppUpdate},
 	m.Route{"UpdateDeviceName", "POST", "/updatename/{deviceId}", c.UpdateDeviceName},
 
@@ -53,7 +54,7 @@ var Routes = m.Routes{
 	m.Route{"UpdateAppEnv", "POST", "/action/device/{deviceuuid}/updateappenv", c.UpdateAppEnv},
 	m.Route{"CheckForUpdate", "POST", "/action/device/{deviceuuid}/checkupdate", c.CheckForUpdate},
 	m.Route{"InstallAppUpdate", "POST", "/action/device/{deviceuuid}/installupdate", c.InstallAppUpdate},
-
+	m.Route{"GetApplicationLog", "POST", "/action/device/{deviceuuid}/getlogs", c.GetLogApplication},
 	//m.Route{"CheckForUpdate", "POST", "/device/{orgId}/checkforupdate/{deviceId}", c.CheckForUpdate},
 }
 

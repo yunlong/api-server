@@ -37,6 +37,12 @@ type DeviceState struct {
 	State 		string  `json:"state"`
 }
 
+type DeviceIP struct {
+	ProjectId 	int 	`json:"projectId"`
+	DeviceId 	int 	`json:"deviceId"`
+	IpAddress 	string  `json:"ipAddress"`
+}
+
 type DeviceStatus struct {
 	ProjectId 	int 	`json:"projectId"`
 	DeviceId 	int 	`json:"deviceId"`

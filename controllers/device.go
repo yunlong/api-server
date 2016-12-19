@@ -493,3 +493,62 @@ func UpdateLatestVersion(w http.ResponseWriter, r *http.Request) {
         }
     }
 }
+
+func UpdateIPAddress(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+
+    clientApiKey := r.URL.Query()["apikey"]
+    if len(clientApiKey) == 0 {
+        w.WriteHeader(http.StatusNotAcceptable)
+        return
+    }
+    var deviceIP models.DeviceIP
+    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+    if err != nil {
+        log.Println(err)
+        return
+    }
+    if err := r.Body.Close(); err != nil {
+        log.Println(err)
+        return
+    }
+    if err := json.Unmarshal(body, &deviceIP); err != nil {
+        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+        w.WriteHeader(422)
+        if err := json.NewEncoder(w).Encode(err); err != nil {
+            log.Println(err)
+            return
+        }
+    }
+
+    var project models.Project
+    var deviceUpdate models.Device
+    if db.Where(models.Project{ID: deviceIP.ProjectId}).First(&project).RecordNotFound() {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    } else {
+        if clientApiKey[0] != project.ApiKey {
+            w.WriteHeader(http.StatusForbidden)
+            return
+        } else {
+            if db.Where(models.Device{ID: deviceIP.DeviceId}).First(&deviceUpdate).RecordNotFound() {
+                w.WriteHeader(http.StatusNotFound)
+                return
+            } else {
+                //var deviceUpdate models.App
+                rowUpdated := db.Model(&deviceUpdate).UpdateColumn(models.Device{IpAddress: deviceIP.IpAddress}).RowsAffected
+
+                w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+                if rowUpdated > 0 {
+                    w.WriteHeader(http.StatusOK)
+                } else {
+                    w.WriteHeader(http.StatusInternalServerError)
+                }
+                if err := json.NewEncoder(w).Encode(http.StatusOK); err != nil {
+                    log.Println(err)
+                }
+                return
+            }
+        }
+    }
+}

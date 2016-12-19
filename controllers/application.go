@@ -142,3 +142,12 @@ func InstallAppUpdate(w http.ResponseWriter, r *http.Request) {
 	PushActionAgent(deviceUuid, InstallUpdate)
 	w.WriteHeader(http.StatusOK)
 }
+
+func GetLogApplication(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	vars := mux.Vars(r)
+	deviceUuid := vars["deviceuuid"]
+
+	PushActionAgent(deviceUuid, "GetLogs")
+	w.WriteHeader(http.StatusOK)
+}

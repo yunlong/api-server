@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"encoding/json"
 
+	//"github.com/gorilla/mux"
 	"github.com/deviceMP/api-server/models"
 	"github.com/gorilla/websocket"
 )
@@ -14,6 +16,7 @@ var addr = flag.String("addr", "127.0.0.1:8080", "http service address")
 var upgrader = websocket.Upgrader{} // use default options
 
 var deviceMap map[string]string
+var dataTransfer map[string]models.DataTransfer
 var deviceMapOffline map[string]bool
 var deviceCurrentStatus map[string]bool
 
@@ -36,6 +39,8 @@ func DeviceDBSyncUp() {
 	var devices []models.Device
 	db.Find(&devices)
 	deviceMap = make(map[string]string)
+	dataTransfer = make(map[string]models.DataTransfer)
+
 	deviceMapOffline = make(map[string]bool)
 	deviceCurrentStatus = make(map[string]bool)
 
@@ -44,10 +49,14 @@ func DeviceDBSyncUp() {
 			var newDevice string = "None"
 			
 			deviceMap[v.Uuid] = newDevice
+
+			dataSendClient := models.DataTransfer{DeviceUuid: v.Uuid, EnableLog: false, Logs: "", Action: newDevice}
+			dataTransfer[v.Uuid] = dataSendClient
 			deviceMapOffline[v.Uuid] = v.IsOnline
 			deviceCurrentStatus[v.Uuid] = v.IsOnline
 		}
 	}
+	//log.Println(deviceMapOffline)
 }
 
 func ConnectivityListen(w http.ResponseWriter, r *http.Request) {
@@ -58,19 +67,28 @@ func ConnectivityListen(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		mt, data, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
-		//deviceAction := deviceMap[string(message)]
-		CheckDeviceOnline(string(message))
-		err = c.WriteMessage(mt, []byte(deviceMap[string(message)]))
+		//Convert struct to bytes
+		var dataClient models.DataTransfer
+		err = json.Unmarshal(data, &dataClient)
+		if err != nil {
+			log.Println("error:", err)
+		}
+		log.Println("---------------------->", dataClient.DeviceUuid)
+		CheckDeviceOnline(dataClient.DeviceUuid)
+		//log.Println("----->",dataTransfer[dataClient.DeviceUuid])
+		clientAction := dataTransfer[dataClient.DeviceUuid]
+		err = c.WriteMessage(mt, []byte(clientAction.Action))
 		if err != nil {
 			log.Println("write:", err)
 			break
 		} else {
-			deviceMap[string(message)] = "None"
+			clientAction.Action = "None"
+			dataTransfer[dataClient.DeviceUuid] = clientAction
 		}
 	}
 }
@@ -96,16 +114,19 @@ func SyncDB() {
 func CheckDeviceOnline(deviceUuid string) {
 	//Check with deviceMapOffline -> 1.Get current state, 2. Compare update
 	deviceMapOffline[deviceUuid] = true
-
-	//Check neu device exist
-	if dev, ok := deviceMapOffline[deviceUuid]; ok {
-		if deviceCurrentStatus[deviceUuid] != dev {
+	//Check if device exist
+	if _, ok := deviceMapOffline[deviceUuid]; ok {
+		//log.Println("call to here!!!", deviceCurrentStatus[deviceUuid])
+		//log.Println("->", deviceCurrentStatus[deviceUuid], dev)
+		if !deviceCurrentStatus[deviceUuid] {
 			var device models.Device
-			if !db.Where(models.Device{Uuid: deviceUuid}).First(&device).RecordNotFound() {
+			if !db.Where(&models.Device{Uuid: deviceUuid}).First(&device).RecordNotFound() {
 				log.Println("call to update on db")
 				device.IsOnline = deviceMapOffline[deviceUuid]
 				db.Save(&device)
 				deviceCurrentStatus[deviceUuid] = deviceMapOffline[deviceUuid]
+			} else {
+				log.Println("device not found ", deviceUuid)
 			}
 		}	
 	} else {
@@ -116,6 +137,7 @@ func CheckDeviceOnline(deviceUuid string) {
 //Interval check in 3s, If device IsOnline = false, update in db
 func SetDeviceOffline() {
 	for uuid, status := range deviceMapOffline {
+		log.Println("::::::::>>>>", uuid, "---", status)
 		if deviceCurrentStatus[uuid] != status {
 			var device models.Device
 			if !db.Where(models.Device{Uuid: uuid}).First(&device).RecordNotFound() {
@@ -134,5 +156,7 @@ func SetDeviceOffline() {
 }
 
 func PushActionAgent(deviceUuid, action string) {
-	deviceMap[deviceUuid] = action
+	device := dataTransfer[deviceUuid]
+	device.Action = action
+	dataTransfer[deviceUuid] = device
 }
